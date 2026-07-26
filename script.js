@@ -20,11 +20,15 @@ const bgColors = {
     10: '#3d1010',
 };
 
+const desktopBgQuery = window.matchMedia('(min-width: 768px)');
+
 let tasks = loadTasks();
 let bgId = getBgId();
 
 applyBackground(bgId);
 renderTasks();
+
+desktopBgQuery.addEventListener('change', () => applyBackground(bgId));
 
 addTaskBtn.addEventListener('click', addTask);
 
@@ -114,7 +118,19 @@ function getBgId() {
 }
 
 function applyBackground(id) {
-    document.body.style.backgroundImage = `url("./backgrounds/${id}.jpg")`;
+    const mobileUrl = `./backgrounds/${id}.jpg`;
+    const url = desktopBgQuery.matches ? `./backgrounds/desktop/${id}.jpg` : mobileUrl;
+
+    // Widescreen images are added per-id over time, so a missing file
+    // shouldn't leave the background blank — fall back to the phone version.
+    const preload = new Image();
+    preload.onload = () => setBackgroundImage(id, url);
+    preload.onerror = () => setBackgroundImage(id, mobileUrl);
+    preload.src = url;
+}
+
+function setBackgroundImage(id, url) {
+    document.body.style.backgroundImage = `url("${url}")`;
     document.body.style.backgroundColor = bgColors[id] || '#030b0d';
 }
 
